@@ -6,5 +6,5 @@ Cursor AI está autorizado a modificar, crear y reorganizar el código librement
 
 ## Cómo correr (placeholder)
 
-Backend: Python (por definir)
+Backend: Python
 Frontend: Next.js

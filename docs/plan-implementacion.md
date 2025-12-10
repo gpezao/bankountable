@@ -1,286 +1,314 @@
-# Contexto del problema
+## 🧠 **Contexto General del Proyecto**
 
-El usuario es un software engineer que lleva años con problemas de control de gastos y una rueda de uso/pago de tarjetas de crédito. Quiere una herramienta que, con **mínimo input manual**, automatice la extracción de movimientos (cartolas PDF, emails o notificaciones), clasifique gastos, muestre el estado y proyecciones de deuda, y entregue recomendaciones accionables para salir del ciclo de deuda y aumentar ahorro.
+Estoy construyendo una herramienta personal de gestión financiera para analizar mis gastos, leer mis cartolas bancarias y dar visibilidad clara sobre mis finanzas. El objetivo es que el sistema funcione con **cero configuración manual**, pueda parsear archivos PDF y Excel reales (incluyendo algunos protegidos con contraseña) provenientes de bancos chilenos, y maneje correctamente formatos numéricos en CLP (con punto como separador de miles).
 
----
+El stack de desarrollo será:
 
-# Objetivo del proyecto
+* **Backend:** Python (FastAPI o Flask), ejecutado SIEMPRE dentro de:
 
-Entregar un sistema incremental que centralice movimientos financieros personales, los clasifique en categorías, calcule indicadores de deuda y ahorro, muestre visualizaciones claras y proponga acciones/recomendaciones. El plan está pensado para que un *agente de IA (Cursor)* pueda implementar cada fase de forma autónoma, con entregables bien definidos y criterios de aceptación claros.
+  * un **virtual environment local**, o
+  * **Docker**
+    (Cursor debe implementar con esta restricción en mente: *no instalar nada global, ni modificar versiones del sistema*.)
 
----
+* **Frontend:** React + Vite, manejado con **yarn**, fácil de recompilar.
 
-# Requisitos previos que debe proporcionar el propietario (inputs para Cursor)
-
-1. Repositorio Git (privado) o credenciales para crear uno. Estructura inicial: `backend/`, `frontend/`, `infra/`, `data-samples/`, `docs/`.
-2. Muestras de cartolas PDF (3–10 de distintos emisores) en `data-samples/cartolas/` y ejemplos de emails de notificación (exportados .eml) en `data-samples/emails/`.
-3. Decisión sobre almacenamiento y hosting (opciones sugeridas en el apartado Infra). Si no hay preferencia, usar Postgres + Vercel/Render/AWS Elastic Beanstalk.
-4. Claves/API si se desean agregadores (Plaid/Belvo) o servicios de OCR/IA (OpenAI, AWS Textract). Estas pueden ser añadidas después para fases posteriores.
-5. Criterios personales de categorización (ej.: categorías obligatorias: Vivienda, Alimentación, Transporte, Suscripciones, Ocio, Deudas).
+El proyecto debe incluir soporte funcional desde el primer momento para leer y parsear archivos reales ubicados en el directorio `data-samples/`, incluidos archivos PDF con contraseña.
 
 ---
 
-# Arquitectura propuesta (visión general)
+# 🎯 **Objetivo del Prompt**
 
-* Ingesta: *PDF parser* + *Email parser* + (opcional) *scraper* o integrador Plaid/Belvo.
-* Procesamiento: normalización -> extracción de transacciones -> deduplicación -> categorización (reglas + ML fallback) -> enriquecimiento (merchant matching, tags).
-* Almacenamiento: PostgreSQL para esquema relacional; opcional Vector DB (Chroma/Pinecone) para búsqueda semántica de descripciones/merchants.
-* Backend: API REST/GraphQL (Node.js/TypeScript - NestJS o Python - FastAPI).
-* Frontend: SPA (React/Next.js). Diseño limpio y moderno, gráficos (Recharts o Chart.js), tablas, timeline de deuda.
-* Observabilidad: logs + pruebas end-to-end.
+Quiero que generes **la estructura completa del proyecto + archivos iniciales + setup + código base** siguiendo **estrictamente** las instrucciones del plan detallado abajo.
 
----
+Cursor debe generar:
 
-# Entregables por fase (detallado para Cursor)
-
-## Fase 1 — MVP: Ingesta manual + Dashboard básico
-
-**Objetivo**: Permitir al usuario subir cartolas PDF y obtener transacciones categorizadas y visualizaciones básicas.
-
-**Tareas**:
-
-1. Repo base y esqueleto (backend, frontend, infra). Crear README con pasos de ejecución.
-2. Backend: endpoint `/upload/pdf` que reciba PDFs y los guarde en `uploads/`.
-3. Parser PDF: implementar pipeline que use `pdfplumber` (o `pypdf`) para extraer tablas y texto. Output: array de transacciones `{date, amount, description, account, raw_line}`.
-4. DB schema mínimo: `users`, `accounts`, `transactions`, `categories`, `rules`.
-5. Clasificación inicial por reglas: conjunto de reglas regex/keywords que mapeen `description` -> `category`.
-6. Frontend: página de upload, lista de transacciones procesadas, panel resumen (total gastos, gastos por categoría, saldo).
-7. Tests unitarios básicos para parser y reglas.
-
-**Criterios de aceptación (Fase 1)**:
-
-* El endpoint acepta archivos PDF y responde con JSON de transacciones extraídas.
-* Al subir 3 cartolas de muestra, >85% de transacciones deben extraerse (fecha, monto, descripción) y al menos 70% auto-categorizadas correctamente según reglas básicas (usar test samples con etiquetas esperadas).
-* Frontend muestra lista de transacciones y un gráfico de torta de gasto por categoría.
-* Documentación en README con cómo ejecutar localmente.
-
-**Entregables**:
-
-* Repositorio con código, tests, `data-samples` y README.
-* Demo local (instrucciones para correr server + frontend).
+1. **Estructura de carpetas**
+2. **Código base del backend**
+3. **Código base del frontend**
+4. **Configuración de entorno (.env, .env.example, settings.py)**
+5. **Scripts de arranque**
+6. **Dockerfile + docker-compose.yml**
+7. **Tests iniciales**
+8. **Lectura de archivos PDF/Excel desde data-samples**
+9. **Parsing correcto de CLP**
+10. **Primera versión de endpoints funcionales**
 
 ---
 
-## Fase 2 — Automatización de ingesta: Email parser y deduplicación
+# 📦 **PLAN DE IMPLEMENTACIÓN (detallado para Cursor)**
 
-**Objetivo**: Reducir intervención humana permitiendo ingestión por email y aplicar deduplicación.
+### 1. Estructura del repositorio
 
-**Tareas**:
-
-1. Integrar Gmail API o IMAP connector para leer correos de transacciones (configurable por usuario); endpoint `/connect/email` para configurar credenciales OAuth.
-2. Implementar email parser con reglas y extracción robusta de monto/fecha/comercio.
-3. Mecanismo de deduplicación (hash por `date+amount+normalized_merchant` y fuzzy match para detectar duplicados entre PDF y email).
-4. UI: página de conexiones (email), log de importaciones y resoluciones de duplicados con posibilidad de marcar manualmente.
-5. Tests e2e simulando correos.
-
-**Criterios de aceptación (Fase 2)**:
-
-* El conector email puede autenticar y extraer correos de ejemplo y convertirlos en transacciones.
-* Al procesar inputs mixtos (PDF + emails) la tasa de duplicados detectados y fusionados debe ser >= 95% en dataset de pruebas controladas.
-* Usuario puede configurar y desconectar su cuenta de email desde UI.
-
-**Entregables**:
-
-* Código de conector, tests, upgrades en DB y UI.
-
----
-
-## Fase 3 — Automatización avanzada: Scraper / Integrador bancario opcional
-
-**Objetivo**: Permitir descarga automática de cartolas vía scraping (Playwright) o integración con Plaid/Belvo si se dispone.
-
-**Tareas**:
-
-1. Implementar módulo de scraping (Playwright) con adaptadores por banco (iniciar con 1 banco de prueba). Debe soportar 2FA manual (push/pin) y reintentos.
-2. Alternativa: integrar Plaid/Belvo como provider (configurable). Implementar adaptador para normalizar transacciones a nuestro modelo.
-3. Scheduler (worker/cron) para ejecutar ingestas y notificar al usuario sobre nuevos movimientos.
-4. Tests de integración y validación de seguridad en manejo de credenciales (encriptación en DB).
-
-**Criterios de aceptación (Fase 3)**:
-
-* Scraper o integrador puede autenticarse y descargar cartolas de la cuenta de prueba (reproducible en ambiente controlado).
-* Los secretos/credenciales quedan cifrados en DB (usando KMS o encriptación a nivel de app).
-* Logs claros de actividad y fallos.
-
-**Entregables**:
-
-* Adaptador por banco (o integración con agregador), scheduler y documentación de configuración.
-
----
-
-## Fase 4 — Clasificación inteligente y motor de recomendaciones
-
-**Objetivo**: Subir la precisión de categorización y añadir proyecciones y recomendaciones para gestión de deuda.
-
-**Tareas**:
-
-1. Implementar modelo de clasificación híbrido: reglas → fallback ML. Opciones:
-
-   * Fine-tuned classifier (small) sobre descriptions.
-   * Embeddings + nearest-neighbor + metadata.
-2. Crear pipeline de entrenamiento offline usando `data-samples/labeled/`.
-3. Implementar motor de proyecciones de deuda que calcule: saldo total, pagos mínimos, intereses anticipados, y fechas estimadas de salida usando estrategias `snowball` y `avalanche`.
-4. UI: sección "Finanzas" con timeline de deuda, simulador (ajusta pagos vs tiempo) y recomendaciones accionables (p. ej. pagar tarjeta A primero).
-5. A/B testing y validación manual de categorías.
-
-**Criterios de aceptación (Fase 4)**:
-
-* Clasificador ML alcanza precisión >=85% en dataset de validación (si no es posible, documentar limitantes y umbrales alcanzados).
-* Motor de proyección muestra escenarios comparables (mínimo 2 estrategias) y calcula impacto en intereses y plazo.
-* UI permite ejecutar simulaciones y ver diferencias entre estrategias.
-
-**Entregables**:
-
-* Modelos entrenados, endpoints de inferencia, frontend con simulador.
-
----
-
-## Fase 5 — UX refinado, notificaciones y mobile-friendly
-
-**Objetivo**: Mejorar usabilidad, añadir notificaciones y optimizar experiencia móvil.
-
-**Tareas**:
-
-1. Diseño UI/UX final: paleta (sugerencia abajo), tipografía, microinteracciones, accesibilidad.
-2. Implementar notificaciones (email + push Web / móvil) para alertas críticas: sobre-gasto, pago mínimo próximo, nueva deuda.
-3. Mobile responsiveness y pruebas cross-browser.
-4. Documentar flows de onboarding y privacidad.
-
-**Criterios de aceptación (Fase 5)**:
-
-* Tests de usabilidad con 3 usuarios muestran que pueden entender dashboard en < 2 minutos (documentar resultados).
-* Notificaciones llegan y se pueden configurar por el usuario.
-* UI cumple WCAG básico (contraste, tamaño de botones, navegabilidad con teclado).
-
-**Entregables**:
-
-* Sistema de notificaciones, diseño final, guía de estilo, pruebas de usabilidad.
-
----
-
-# Especificaciones técnicas concretas (APIs, DB, formatos)
-
-## Esquema de la tabla `transactions` (Postgres)
+Crear un monorepo llamado `bankountable/` con esta estructura:
 
 ```
-id: UUID PK
-user_id: UUID FK -> users
-account_id: UUID FK -> accounts
-date: DATE
-amount_cents: INT
-currency: VARCHAR
-description: TEXT
-normalized_merchant: TEXT
-category_id: UUID FK -> categories
-tags: JSONB
-source: ENUM('pdf','email','scraper','api')
-raw: JSONB
-created_at, updated_at
-```
-
-## Endpoint mínimo (REST)
-
-* `POST /api/upload/pdf` -> recibe multipart/form-data -> devuelve lista de transacciones extraídas
-* `POST /api/connect/email` -> inicia oauth o guarda credenciales
-* `GET /api/transactions?from=&to=&category=` -> paginación
-* `POST /api/categorize/retrain` -> dispara reentrenamiento con dataset etiquetado
-* `GET /api/forecast/debt?strategy=snowball|avalanche` -> devuelve proyección
-
-## Formato de salida de extracción
-
-```json
-[
-  {"date":"2025-11-01","amount_cents":-45000,"currency":"CLP","description":"Pago supermercado XYZ","account":"Tarjeta Banco A","raw_line":"..."}
-]
+bankountable/
+  backend/
+    app/
+      controllers/
+      services/
+      models/
+      utils/
+      config/
+    tests/
+    data-samples/   ← usar archivos reales aquí
+    requirements.txt
+    Dockerfile
+    .env.example
+  frontend/
+    src/
+    public/
+    package.json
+    yarn.lock
+  docker-compose.yml
+  README.md
 ```
 
 ---
 
-# Reglas básicas de categorización (ejemplos que Cursor debe codificar)
+# 🐍 **2. Backend (Python)**
 
-* `/sodimac|homecenter|ferreteria/i` -> `Hogar y mejoras`
-* `/walmart|tottus|lider|supermercado/i` -> `Alimentación`
-* `/spotify|netflix|disney|apple.com/i` -> `Suscripciones`
-* `/falabella|ripley|paris/i` -> `Compras`
+### Requisitos generales:
 
-Se debe proveer una UI para editar/crear reglas por usuario.
+* Usar **FastAPI** (preferido) o Flask si es más sencillo.
+* El backend **NO debe depender de instalaciones globales**.
+* Crear un entorno Python local mediante:
 
----
+```
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-# Motor de proyección de deuda: lógica simplificada que debe implementarse
+O usar Docker:
 
-1. Tomar el snapshot de deuda por tarjeta: `balance`, `interest_rate_monthly`, `minimum_payment`.
-2. Para cada estrategia:
-
-   * Simular mes a mes aplicando `payment` hasta que saldo = 0.
-   * Calcular `interest_paid_total`, `months_to_payoff`.
-3. Entregar tablas y gráfico comparativo.
-
-Parámetros ajustables: `extra_payment_per_month`, `priority_order`.
+* El backend debe funcionar completamente dentro del contenedor.
+* Debe mapear `data-samples/` hacia `/app/data-samples`.
 
 ---
 
-# Diseño visual — directrices para el UI/UX (para que Cursor implemente)
+## 2.1. requirements.txt (Cursor debe generarlo)
 
-* Estilo: minimal, tarjetas con sombras suaves, tipografía sans-serif legible (Inter). Bordes 12px, spacing generoso.
-* Paleta sugerida: fondo #F7FAFC (very light), primario #0F6FFF (azul), secundario #00B37E (verde), acento #FFB020 (amarillo), neutrales en grises.
-* Dashboard principal: hero con saldo neto, tarjeta de deuda total, gráfico de barras: gasto por categoría (últimos 3 meses), gráfico de línea: flujo de caja mensual, lista de transacciones con filtros.
-* Importante: estados vacíos amigables (onboarding con pasos: conectar email/subir cartola).
-* Microcopy directo y empático: "Te quedan $X para tu objetivo", "Recomendación: paga tarjeta X para reducir intereses"
+Incluir mínimo:
 
----
-
-# Seguridad y privacidad (requerido)
-
-* Encriptar credenciales sensibles en DB. Usar KMS/secret manager.
-* TLS para todo el tráfico.
-* Logs no deben incluir PII completo (mascarar últimos 4 dígitos de tarjetas).
-* Políticas de retención: por defecto 3 años, configurable.
-* Consentimiento claro en onboarding para almacenar y procesar datos financieros.
+```
+fastapi
+uvicorn
+python-dotenv
+pydantic
+pandas
+openpyxl
+pdfplumber
+PyMuPDF
+python-dateutil
+```
 
 ---
 
-# Testing & QA
+## 2.2. Configuración global (obligatorio)
 
-* Unit tests para parser, reglas y calculadora de deuda.
-* Integration tests para endpoints de ingest.
-* E2E tests UI flows (upload, connect email, simulate payoff).
-* Dataset de pruebas en `data-samples/` con etiquetas esperadas.
+Crear archivo:
+
+**backend/app/config/settings.py**
+
+Debe contener:
+
+* Rutas de data-samples
+* Contraseñas para PDF
+* Configuración regional de CLP
+* Función load_dotenv
+
+Ejemplo a implementar:
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Settings:
+    DATA_SAMPLES_PATH = os.getenv("DATA_SAMPLES_PATH", "data-samples")
+    PDF_PASSWORD_1 = os.getenv("PDF_PASSWORD_1", "0647")
+    PDF_PASSWORD_2 = os.getenv("PDF_PASSWORD_2", "198306479")
+
+    THOUSANDS_SEPARATOR = "."
+    DECIMAL_SEPARATOR = ","
+
+settings = Settings()
+```
+
+Crear `.env.example`:
+
+```
+DATA_SAMPLES_PATH=data-samples
+PDF_PASSWORD_1=0647
+PDF_PASSWORD_2=198306479
+```
 
 ---
 
-# Infra & Deployment (opciones y recomendaciones)
+## 2.3. Lectura de archivos (funcional desde el día 1)
 
-* Infra mínima: Postgres gestionado, storage para uploads (S3), backend con container (Docker) detrás de balancer y CDN para frontend.
-* CI: GitHub Actions para tests + deploy a staging.
-* Secrets: Vault / AWS Secrets Manager / GitHub Encrypted Secrets.
+Crear servicio:
 
----
+**backend/app/services/file_loader.py**
 
-# Telemetría y observabilidad
+Debe:
 
-* Integrar logging estructurado (console + file + external si disponible).
-* Metrics: número de transacciones procesadas / hora, tasa de error de parsing, latencia de endpoints.
+* Abrir PDFs desde `data-samples/`
+* Probar ambas contraseñas automáticamente
+* Levantar excepción clara si falla
 
----
+Ejemplo:
 
-# Checklist final para que Cursor ejecute cada fase sin intervención humana adicional
+```python
+import pdfplumber
+from app.config.settings import settings
 
-1. Crear repo con estructura y sample data.
-2. Implementar endpoints y parsers según Fase 1 y pruebas asociadas.
-3. Subir artefactos en `data-samples/expected/` para validar criterios de aceptación.
-4. Documentar cómo inyectar credenciales para email/scraper y cómo configurar provider de OCR/IA.
-5. Entregar UI funcional y un script `seed-demo-data.sh` que permita al revisor ver la app con datos reales de ejemplo.
-
----
-
-# Notas finales para Cursor (instrucciones operativas)
-
-* Priorizar privacidad y facilidad de uso. Evitar pedir acciones manuales frecuentes al usuario.
-* Garantizar trazabilidad: cada transacción importada debe poder rastrearse a su fuente original (PDF line / email id).
-* Mantener modularidad: diseñar adaptadores para fuentes nuevas (banco X, proveedor Y) sin tocar core.
-* Entregar documentación técnica clara y demo funcional en cada fase.
+def load_pdf(filename):
+    path = f"{settings.DATA_SAMPLES_PATH}/{filename}"
+    for pwd in [settings.PDF_PASSWORD_1, settings.PDF_PASSWORD_2, None]:
+        try:
+            return pdfplumber.open(path, password=pwd)
+        except:
+            continue
+    raise Exception(f"No se pudo abrir el PDF: {filename}")
+```
 
 ---
 
-*Fin del documento.*
+## 2.4. Parsing de CLP (crítico)
+
+Crear archivo:
+
+**backend/app/utils/parsing.py**
+
+Implementar:
+
+```python
+from app.config.settings import settings
+
+def parse_clp(value: str) -> int:
+    cleaned = value.replace(settings.THOUSANDS_SEPARATOR, "").replace("$", "").strip()
+    return int(cleaned)
+```
+
+Debe funcionar con:
+
+* `$1.234.567`
+* `1.234`
+* `123.456.789`
+* `    $    234.000`
+
+---
+
+## 2.5. Endpoints iniciales
+
+Crear controladores:
+
+* `/api/parse/pdf`
+* `/api/parse/excel`
+* `/api/upload`
+
+Todos deben usar las utilidades anteriores.
+
+---
+
+## 2.6. Tests
+
+En:
+
+```
+backend/tests/
+```
+
+Crear:
+
+* `test_parsing.py`
+* `test_pdf_loader.py`
+* `test_api_routes.py`
+
+Los tests deben usar **archivos reales** de `data-samples/`.
+
+---
+
+# ⚛️ **3. Frontend (React + Vite)**
+
+### Requisitos:
+
+* Usar yarn, NO npm global.
+* Comandos:
+
+```
+cd frontend
+yarn install
+yarn dev
+```
+
+* Crear pantalla demo que:
+
+  * muestre tabla de transacciones (dummy data)
+  * permita subir archivo PDF/Excel al backend
+
+Crear archivo `.env`:
+
+```
+VITE_API_URL=http://localhost:8000
+```
+
+---
+
+# 🐳 **4. Docker**
+
+Crear:
+
+## backend/Dockerfile
+
+Debe:
+
+* Copiar backend
+* Instalar requirements
+* Exponer puerto
+* Ejecutar uvicorn
+
+## docker-compose.yml
+
+Debe levantar:
+
+* backend en `http://localhost:8000`
+* frontend en `http://localhost:3000`
+* volumen para `data-samples`
+
+---
+
+# 🧪 **5. Acceptance Criteria (obligatorio)**
+
+Cursor debe validar:
+
+1. Ejecutar backend con `uvicorn` funciona sin errores.
+2. Endpoint `/api/parse/pdf` retorna contenido desde un PDF real.
+3. Lectura funciona incluso cuando el PDF tiene contraseña.
+4. parse_clp convierte correctamente valores CLP con puntos.
+5. El frontend se levanta con `yarn dev` sin errores.
+6. docker-compose levanta ambos servicios correctamente.
+
+---
+
+# 🧱 **6. Entregables concretos**
+
+Cursor debe generar:
+
+* La estructura completa
+* Todos los archivos mencionados
+* Código listo para ejecutar
+* Tests funcionando
+* Backend + frontend integrados
+* Dockerfiles funcionando
+* Documentación inicial en README.md
+
+---
+
+# 🚀 **INSTRUCCIÓN FINAL PARA CURSOR**
+
+**Genera TODO el proyecto completo siguiendo este plan punto por punto.
+Crea todos los archivos, carpetas, código, tests, Docker config, y documentación necesarios para que el proyecto se ejecute sin cambios adicionales.**

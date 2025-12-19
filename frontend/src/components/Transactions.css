@@ -1,0 +1,281 @@
+.transactions {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.transactions-header {
+  margin-bottom: 2rem;
+}
+
+.transactions-header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 2rem;
+}
+
+.filters-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #666;
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.transactions-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-table thead {
+  background-color: #f8f9fa;
+}
+
+.transactions-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.transactions-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.transactions-table th.sortable:hover {
+  background-color: #f8f9fa;
+}
+
+.sort-icon {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.transactions-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.transactions-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.transactions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.date-cell {
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.description-cell {
+  min-width: 200px;
+}
+
+.description-main {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.description-merchant {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.amount-cell {
+  font-weight: 600;
+  color: #667eea;
+  white-space: nowrap;
+}
+
+.category-cell {
+  min-width: 150px;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background-color: #e9ecef;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.category-badge:hover {
+  background-color: #dee2e6;
+}
+
+.category-select {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.tags-cell {
+  min-width: 150px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.tag-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.tag-edit-btn:hover {
+  opacity: 1;
+}
+
+.tags-edit-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.tags-edit-input:focus {
+  outline: none;
+  border-color: #764ba2;
+}
+
+.payment-cell {
+  white-space: nowrap;
+}
+
+.payment-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.payment-badge:hover {
+  opacity: 0.8;
+}
+
+.payment-select {
+  padding: 0.375rem 0.75rem;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.payment-select:focus {
+  outline: none;
+  border-color: #764ba2;
+}
+
+.payment-credit {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.payment-debit {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .transactions {
+    padding: 1rem;
+  }
+  
+  .transactions-table {
+    font-size: 0.85rem;
+  }
+  
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+

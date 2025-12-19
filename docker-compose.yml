@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: bankountable_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bankountable_db
+      MYSQL_USER: bankountable_user
+      MYSQL_PASSWORD: bankountable_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bankountable_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bankountable_backend
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: bankountable_user
+      DB_PASSWORD: bankountable_password
+      DB_NAME: bankountable_db
+      MYSQL_ROOT_PASSWORD: root_password
+      PDF_PASSWORD_1: "0647"
+      PDF_PASSWORD_2: 198306479
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./data-samples:/app/data-samples
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - bankountable_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bankountable_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - bankountable_network
+    restart: unless-stopped
+
+networks:
+  bankountable_network:
+    driver: bridge
+
+volumes:
+  mysql_data:

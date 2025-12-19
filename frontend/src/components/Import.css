@@ -1,0 +1,270 @@
+.import {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.import-header {
+  margin-bottom: 2rem;
+}
+
+.import-header h1 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 2rem;
+}
+
+.import-upload-section {
+  margin-bottom: 3rem;
+}
+
+.upload-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.upload-card h3 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.upload-area {
+  margin-bottom: 1.5rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+  margin-bottom: 1rem;
+}
+
+.file-label:hover {
+  opacity: 0.9;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.upload-button {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: inherit;
+}
+
+.upload-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.import-result {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.import-result.success {
+  background: #d1fae5;
+  border-left: 4px solid #10b981;
+}
+
+.import-result.error {
+  background: #fee2e2;
+  border-left: 4px solid #ef4444;
+}
+
+.result-icon {
+  font-size: 2rem;
+}
+
+.result-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.result-content p {
+  margin: 0.25rem 0;
+  color: #666;
+}
+
+.result-count {
+  font-weight: 600;
+  color: #10b981;
+}
+
+.import-history-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.history-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.refresh-button {
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.history-table-container {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table thead {
+  background-color: #f8f9fa;
+}
+
+.history-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.history-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.history-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.filename-cell {
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-processing {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-failed {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.error-cell {
+  max-width: 200px;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  cursor: help;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .import {
+    padding: 1rem;
+  }
+  
+  .history-table {
+    font-size: 0.85rem;
+  }
+  
+  .history-table th,
+  .history-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+

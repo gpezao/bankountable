@@ -1,314 +1,315 @@
-## 🧠 **Contexto General del Proyecto**
-
-Estoy construyendo una herramienta personal de gestión financiera para analizar mis gastos, leer mis cartolas bancarias y dar visibilidad clara sobre mis finanzas. El objetivo es que el sistema funcione con **cero configuración manual**, pueda parsear archivos PDF y Excel reales (incluyendo algunos protegidos con contraseña) provenientes de bancos chilenos, y maneje correctamente formatos numéricos en CLP (con punto como separador de miles).
-
-El stack de desarrollo será:
-
-* **Backend:** Python (FastAPI o Flask), ejecutado SIEMPRE dentro de:
-
-  * un **virtual environment local**, o
-  * **Docker**
-    (Cursor debe implementar con esta restricción en mente: *no instalar nada global, ni modificar versiones del sistema*.)
-
-* **Frontend:** React + Vite, manejado con **yarn**, fácil de recompilar.
-
-El proyecto debe incluir soporte funcional desde el primer momento para leer y parsear archivos reales ubicados en el directorio `data-samples/`, incluidos archivos PDF con contraseña.
+**Proyecto: Gestor Financiero Personal (Frontend-first, automatizado, evolutivo)**
 
 ---
 
-# 🎯 **Objetivo del Prompt**
+## CONTEXTO GENERAL
 
-Quiero que generes **la estructura completa del proyecto + archivos iniciales + setup + código base** siguiendo **estrictamente** las instrucciones del plan detallado abajo.
+Estoy construyendo una aplicación personal para mejorar la gestión de mis finanzas.
+El problema principal es que **no tengo control real de mis gastos**, uso tarjetas de crédito de forma poco consciente y **no reviso cartolas manualmente**.
 
-Cursor debe generar:
+El objetivo del sistema es:
 
-1. **Estructura de carpetas**
-2. **Código base del backend**
-3. **Código base del frontend**
-4. **Configuración de entorno (.env, .env.example, settings.py)**
-5. **Scripts de arranque**
-6. **Dockerfile + docker-compose.yml**
-7. **Tests iniciales**
-8. **Lectura de archivos PDF/Excel desde data-samples**
-9. **Parsing correcto de CLP**
-10. **Primera versión de endpoints funcionales**
+* Visibilizar en qué gasto mi dinero
+* Detectar patrones de malos hábitos financieros
+* Reduccir al mínimo la gestión manual
+* Evolucionar desde una app visual → automatizada → inteligente
+
+⚠️ **Este proyecto debe construirse por fases estrictas.**
+⚠️ **Al finalizar cada fase o subfase, DEBES detenerte y preguntarme si autorizo continuar.**
 
 ---
 
-# 📦 **PLAN DE IMPLEMENTACIÓN (detallado para Cursor)**
+## PRINCIPIOS OBLIGATORIOS (NO NEGOCIABLES)
 
-### 1. Estructura del repositorio
+### 1. Backend
 
-Crear un monorepo llamado `bankountable/` con esta estructura:
+* Usar **Python + FastAPI**
+* Ejecutarse **SIEMPRE** en:
 
-```
-bankountable/
-  backend/
-    app/
-      controllers/
-      services/
-      models/
-      utils/
-      config/
-    tests/
-    data-samples/   ← usar archivos reales aquí
-    requirements.txt
-    Dockerfile
-    .env.example
-  frontend/
-    src/
-    public/
-    package.json
-    yarn.lock
-  docker-compose.yml
-  README.md
-```
+  * virtualenv **o**
+  * Docker (preferido)
+* ❌ No instalar dependencias globales
+* ❌ No modificar versiones del sistema
 
----
+### 2. Base de Datos
 
-# 🐍 **2. Backend (Python)**
+* **MySQL obligatorio**
+* Generar:
 
-### Requisitos generales:
+  * esquema inicial
+  * scripts SQL o migraciones
+* Credenciales **NO hardcodeadas**
 
-* Usar **FastAPI** (preferido) o Flask si es más sencillo.
-* El backend **NO debe depender de instalaciones globales**.
-* Crear un entorno Python local mediante:
+  * Usar `.env` + `.env.example`
+* El sistema debe levantar aunque la DB esté vacía
 
-```
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### 3. Frontend
 
-O usar Docker:
+* React + Vite
+* Usar **Yarn**
+* Fácil de recompilar y probar cambios
+* El frontend debe poder funcionar:
 
-* El backend debe funcionar completamente dentro del contenedor.
-* Debe mapear `data-samples/` hacia `/app/data-samples`.
+  * primero con **datos dummy**
+  * luego con backend real
+
+### 4. Filosofía de UX
+
+* El usuario tiene malos hábitos financieros
+* No quiere pensar ni categorizar manualmente
+* El sistema debe:
+
+  * mostrar patrones
+  * hacer visibles los problemas
+  * ser empático (no culpabilizante)
+* **Automatización > input manual**
 
 ---
 
-## 2.1. requirements.txt (Cursor debe generarlo)
-
-Incluir mínimo:
+## ROADMAP DE FASES (ORDEN ESTRICTO)
 
 ```
-fastapi
-uvicorn
-python-dotenv
-pydantic
-pandas
-openpyxl
-pdfplumber
-PyMuPDF
-python-dateutil
+FASE 0 → Infraestructura mínima
+FASE 1 → Frontend primero (UX + maqueta + datos dummy)
+FASE 2 → Backend real + parsing de cartolas
+FASE 3 → Automatización (Gmail / scraping)
+FASE 4 → Inteligencia financiera
 ```
 
 ---
 
-## 2.2. Configuración global (obligatorio)
+# 🧱 FASE 0 — SETUP TÉCNICO BASE
 
-Crear archivo:
+### Objetivo
 
-**backend/app/config/settings.py**
+Tener el sistema levantado técnicamente, sin lógica de negocio.
 
-Debe contener:
+### Tareas
 
-* Rutas de data-samples
-* Contraseñas para PDF
-* Configuración regional de CLP
-* Función load_dotenv
+* Crear monorepo con:
 
-Ejemplo a implementar:
+  * `/backend`
+  * `/frontend`
+* Backend:
 
-```python
-import os
-from dotenv import load_dotenv
+  * FastAPI
+  * MySQL connection
+  * `/health` endpoint
+* Frontend:
 
-load_dotenv()
+  * React + Vite
+  * pantalla base
+* Docker + docker-compose:
 
-class Settings:
-    DATA_SAMPLES_PATH = os.getenv("DATA_SAMPLES_PATH", "data-samples")
-    PDF_PASSWORD_1 = os.getenv("PDF_PASSWORD_1", "0647")
-    PDF_PASSWORD_2 = os.getenv("PDF_PASSWORD_2", "198306479")
+  * backend
+  * frontend
+  * mysql
+* README con instrucciones claras
 
-    THOUSANDS_SEPARATOR = "."
-    DECIMAL_SEPARATOR = ","
+### Criterios de aceptación
 
-settings = Settings()
-```
+* `docker-compose up` levanta todo
+* `/health` responde OK
+* Frontend visible en navegador
 
-Crear `.env.example`:
+### 🛑 STOP POINT
 
-```
-DATA_SAMPLES_PATH=data-samples
-PDF_PASSWORD_1=0647
-PDF_PASSWORD_2=198306479
-```
+**Pregunta explícita:**
 
----
-
-## 2.3. Lectura de archivos (funcional desde el día 1)
-
-Crear servicio:
-
-**backend/app/services/file_loader.py**
-
-Debe:
-
-* Abrir PDFs desde `data-samples/`
-* Probar ambas contraseñas automáticamente
-* Levantar excepción clara si falla
-
-Ejemplo:
-
-```python
-import pdfplumber
-from app.config.settings import settings
-
-def load_pdf(filename):
-    path = f"{settings.DATA_SAMPLES_PATH}/{filename}"
-    for pwd in [settings.PDF_PASSWORD_1, settings.PDF_PASSWORD_2, None]:
-        try:
-            return pdfplumber.open(path, password=pwd)
-        except:
-            continue
-    raise Exception(f"No se pudo abrir el PDF: {filename}")
-```
+> “Fase 0 completada. ¿Confirmas que puedo continuar con la Fase 1 (Frontend + UX)?”
 
 ---
 
-## 2.4. Parsing de CLP (crítico)
+# 🧱 FASE 1 — FRONTEND PRIMERO (UX + MAQUETA + DATOS DUMMY)
 
-Crear archivo:
-
-**backend/app/utils/parsing.py**
-
-Implementar:
-
-```python
-from app.config.settings import settings
-
-def parse_clp(value: str) -> int:
-    cleaned = value.replace(settings.THOUSANDS_SEPARATOR, "").replace("$", "").strip()
-    return int(cleaned)
-```
-
-Debe funcionar con:
-
-* `$1.234.567`
-* `1.234`
-* `123.456.789`
-* `    $    234.000`
+⚠️ **NO DEPENDE DEL BACKEND**
+⚠️ **DEBE USAR DATOS DUMMY REALISTAS**
 
 ---
 
-## 2.5. Endpoints iniciales
+## 🎯 Objetivo
 
-Crear controladores:
+Validar **experiencia de usuario y visibilidad financiera** antes de automatizar o parsear datos reales.
 
-* `/api/parse/pdf`
-* `/api/parse/excel`
-* `/api/upload`
+El frontend debe permitir que una persona entienda **en menos de 1 minuto**:
 
-Todos deben usar las utilidades anteriores.
-
----
-
-## 2.6. Tests
-
-En:
-
-```
-backend/tests/
-```
-
-Crear:
-
-* `test_parsing.py`
-* `test_pdf_loader.py`
-* `test_api_routes.py`
-
-Los tests deben usar **archivos reales** de `data-samples/`.
+* En qué gasta su dinero
+* Cuáles son sus gastos recurrentes
+* Dónde se le va la plata sin darse cuenta
 
 ---
 
-# ⚛️ **3. Frontend (React + Vite)**
+## 📊 DATOS DUMMY (OBLIGATORIOS)
 
-### Requisitos:
+Generar un dataset dummy que represente:
 
-* Usar yarn, NO npm global.
-* Comandos:
+### Estructura mínima
 
-```
-cd frontend
-yarn install
-yarn dev
-```
+* Fecha
+* Descripción / comercio
+* Monto en CLP (con puntos como separador de miles)
+* Categoría
+* Etiquetas
+* Medio de pago (crédito / débito)
+* Múltiples meses (mínimo 3)
 
-* Crear pantalla demo que:
+### Patrones que DEBEN existir
 
-  * muestre tabla de transacciones (dummy data)
-  * permita subir archivo PDF/Excel al backend
-
-Crear archivo `.env`:
-
-```
-VITE_API_URL=http://localhost:8000
-```
+* Gastos pequeños recurrentes (cafés, delivery)
+* Gastos grandes aislados
+* Categorías desbalanceadas
+* Uso excesivo de tarjeta de crédito
+* Comercios repetidos
 
 ---
 
-# 🐳 **4. Docker**
+## 🖥️ Vistas obligatorias
 
-Crear:
+### 1. Dashboard principal
 
-## backend/Dockerfile
+* Total gastado
+* Distribución de gastos (gráficos)
+* Top categorías
+* Top comercios
+* Alertas visuales (simuladas)
 
-Debe:
+### 2. Vista de transacciones
 
-* Copiar backend
-* Instalar requirements
-* Exponer puerto
-* Ejecutar uvicorn
+* Tabla de gastos
+* Filtros
+* Categoría editable (UI)
 
-## docker-compose.yml
+### 3. Etiquetas
 
-Debe levantar:
-
-* backend en `http://localhost:8000`
-* frontend en `http://localhost:3000`
-* volumen para `data-samples`
-
----
-
-# 🧪 **5. Acceptance Criteria (obligatorio)**
-
-Cursor debe validar:
-
-1. Ejecutar backend con `uvicorn` funciona sin errores.
-2. Endpoint `/api/parse/pdf` retorna contenido desde un PDF real.
-3. Lectura funciona incluso cuando el PDF tiene contraseña.
-4. parse_clp convierte correctamente valores CLP con puntos.
-5. El frontend se levanta con `yarn dev` sin errores.
-6. docker-compose levanta ambos servicios correctamente.
+* Crear etiquetas
+* Asignar etiquetas a gastos
 
 ---
 
-# 🧱 **6. Entregables concretos**
+## 🎨 Diseño visual
 
-Cursor debe generar:
-
-* La estructura completa
-* Todos los archivos mencionados
-* Código listo para ejecutar
-* Tests funcionando
-* Backend + frontend integrados
-* Dockerfiles funcionando
-* Documentación inicial en README.md
+* Minimalista
+* Empático
+* Fácil de leer
+* Colores suaves
+* Buen contraste
 
 ---
 
-# 🚀 **INSTRUCCIÓN FINAL PARA CURSOR**
+## ✅ Criterios de aceptación — FASE 1
 
-**Genera TODO el proyecto completo siguiendo este plan punto por punto.
-Crea todos los archivos, carpetas, código, tests, Docker config, y documentación necesarios para que el proyecto se ejecute sin cambios adicionales.**
+* El frontend corre con `yarn dev`
+* Todos los componentes usan datos dummy
+* Los datos permiten detectar patrones reales
+* No requiere backend activo
+* La UX es clara y comprensible rápidamente
+
+---
+
+### 🛑 STOP POINT
+
+**Pregunta obligatoria:**
+
+> “Fase 1 completada con datos dummy.
+> ¿Deseas iterar el diseño o avanzo a la Fase 2 (Backend real + parsing)?”
+
+---
+
+# 🧱 FASE 2 — BACKEND REAL + PARSING DE CARTOLAS
+
+---
+
+## 2.1 Base de datos MySQL
+
+Crear tablas:
+
+* transactions
+* categories
+* tags
+* accounts
+* imports
+
+---
+
+## 2.2 Parsing REAL (OBLIGATORIO EN EL PRIMER ENTREGABLE)
+
+* Leer archivos desde `data-samples/`
+* PDFs protegidos con contraseña:
+
+  * `0647`
+  * `198306479`
+* CLP con `.` como separador de miles
+* Parsing entrenado específicamente con los archivos de ejemplo
+* Las contraseñas deben manejarse como variables de entorno
+
+⚠️ **El sistema DEBE parsear correctamente desde el primer entregable de esta fase**
+
+---
+
+## 2.3 API
+
+* `/api/import/pdf`
+* `/api/transactions`
+* `/api/stats`
+* `/api/tags`
+
+Frontend ahora consume backend real.
+
+---
+
+### 🛑 STOP POINT
+
+> “Fase 2 completada. ¿Avanzo a la Fase 3 (Automatización)?”
+
+---
+
+# 🧱 FASE 3 — AUTOMATIZACIÓN
+
+Opciones a implementar progresivamente:
+
+* Gmail API:
+
+  * Lectura automática de correos
+  * Descarga de cartolas
+* Scraping bancario (opcional):
+
+  * Playwright
+* Jobs programados
+* Vista de estado en frontend
+
+---
+
+### 🛑 STOP POINT
+
+> “Fase 3 completada. ¿Avanzo a la Fase 4 (Inteligencia financiera)?”
+
+---
+
+# 🧱 FASE 4 — INTELIGENCIA FINANCIERA
+
+* Clasificación automática de gastos
+* Proyección de deuda
+* Alertas inteligentes
+* Recomendaciones accionables
+
+---
+
+## REGLA FINAL
+
+❗ **NO avances de fase sin mi confirmación explícita.**
+❗ **Prioriza claridad, UX y automatización por sobre complejidad técnica.**
+
+---
+
+### ✅ Comienza ahora con la **FASE 0**.
+
+---
+
+Si luego quieres, puedo ayudarte a:
+
+* auditar lo que Cursor genere
+* iterar UX
+* definir métricas de “mejora de hábitos”
+* convertir esto en producto serio
+
+Cuando quieras, seguimos.
